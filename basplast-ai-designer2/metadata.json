@@ -1,0 +1,5 @@
+{
+  "name": "BasPlast AI Designer",
+  "description": "Internal AI tool for generating thermos product designs using Gemini and Imagen models.",
+  "requestFramePermissions": []
+}

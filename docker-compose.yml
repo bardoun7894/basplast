@@ -1,0 +1,41 @@
+services:
+  basplast-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_KIE_API_KEY=699c9fad8f427759045e4c61139f1338
+    container_name: basplast_app
+    ports:
+      - "80:80"
+    depends_on:
+      - basplast-backend
+    restart: always
+
+  basplast-backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: basplast_backend
+    environment:
+      - DATABASE_URL=postgresql://user:password@basplast-db:5432/basplast
+      - PUBLIC_HOST=184.174.37.148
+    volumes:
+      - ./server/uploads:/app/uploads
+    depends_on:
+      - basplast-db
+    restart: always
+
+  basplast-db:
+    image: postgres:15-alpine
+    container_name: basplast_db
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=basplast
+    volumes:
+      - basplast_pgdata:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  basplast_pgdata:

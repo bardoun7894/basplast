@@ -1,0 +1,30 @@
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+model Generation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  prompt    String
+  model     String   // 'multi-model', 'gpt...', etc
+  
+  // Inputs
+  length    String?
+  shape     String?
+  color     String?
+  refImage  String? // URL or base64 (stored as path if uploaded)
+  
+  // Outputs
+  images    String[] // Array of Image URLs
+  
+  // Meta
+  status    String   @default("pending") // pending, success, failed
+  error     String?
+}

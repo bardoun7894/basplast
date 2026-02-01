@@ -12,6 +12,15 @@ export enum ThermosShape {
   Ergonomic = 'Ergonomic Grip'
 }
 
+export enum HeadHandleDecoration {
+  None = 'None',
+  Waves = 'Waves',
+  Crown = 'Crown',
+  Zigzag = 'Zigzag',
+  Sculpted = 'Sculpted',
+  Grooves = 'Grooves'
+}
+
 export enum KieModel {
   GPT_4o_Image = 'gpt-image/1.5-image-to-image',
   Flux_Pro_Ultra = 'flux-pro-1.1-ultra',
@@ -28,6 +37,7 @@ export interface DesignRequest {
   attributes: {
     length: ThermosLength | '';
     shape: ThermosShape | '';
+    decoration: HeadHandleDecoration | '';
     color: string;
     model: string;
     isAdMode?: string;

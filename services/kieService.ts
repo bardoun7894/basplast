@@ -48,6 +48,7 @@ export async function createGenerationTask(
   attributes: {
     length?: string;
     shape?: string;
+    decoration?: string;
     color?: string;
     model?: string;
     refImage: string; // REQUIRED now
@@ -77,8 +78,15 @@ export async function createGenerationTask(
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || "Generation failed");
+    const text = await res.text();
+    let errorMsg = "Generation failed";
+    try {
+      const err = JSON.parse(text);
+      errorMsg = err.error || errorMsg;
+    } catch {
+      errorMsg = text.substring(0, 200);
+    }
+    throw new Error(errorMsg);
   }
 
   const data = await res.json();

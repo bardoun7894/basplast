@@ -13,4 +13,7 @@ COPY . .
 # Generate Prisma client inside container
 RUN npx prisma generate
 
-CMD ["node", "index.js"]
+# Make startup script executable
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]

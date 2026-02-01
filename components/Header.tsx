@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ARABIC_LABELS } from '../constants';
 
 interface HeaderProps {
@@ -7,6 +7,25 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ currentView, onNavigate }) => {
+  const [credits, setCredits] = useState<number | null>(null);
+
+  const fetchCredits = async () => {
+    try {
+      const res = await fetch('/api/credits');
+      const data = await res.json();
+      setCredits(data.credits);
+    } catch (e) {
+      console.error("Failed to fetch credits:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchCredits();
+    // Refresh credits every 30 seconds
+    const interval = setInterval(fetchCredits, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -17,6 +36,18 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate }) => {
           <div>
             <h1 className="text-xl font-bold text-gray-900 leading-none">{ARABIC_LABELS.appTitle}</h1>
             <p className="text-xs text-gray-500 mt-0.5">{ARABIC_LABELS.appSubtitle}</p>
+          </div>
+        </div>
+
+        {/* Credits Display */}
+        <div className="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-full px-4 py-1.5">
+          <span className="text-amber-600 text-lg">💰</span>
+          <div className="text-right">
+            <span className="text-xs text-amber-600 font-medium">الرصيد</span>
+            <p className="text-sm font-bold text-amber-700">
+              {credits !== null ? credits.toLocaleString() : '...'}
+              <span className="text-xs font-normal mr-1">credits</span>
+            </p>
           </div>
         </div>
 

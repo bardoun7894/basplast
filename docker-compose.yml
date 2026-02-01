@@ -4,10 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - VITE_KIE_API_KEY=699c9fad8f427759045e4c61139f1338
+        - VITE_KIE_API_KEY=${VITE_KIE_API_KEY}
     container_name: basplast_app
     ports:
-      - "80:80"
+      - "4210:80"
     depends_on:
       - basplast-backend
     restart: always
@@ -19,7 +19,8 @@ services:
     container_name: basplast_backend
     environment:
       - DATABASE_URL=postgresql://user:password@basplast-db:5432/basplast
-      - PUBLIC_HOST=184.174.37.148
+      - PUBLIC_HOST=91.230.110.187:4210
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ./server/uploads:/app/uploads
     depends_on:

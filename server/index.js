@@ -8,6 +8,7 @@ const {
     generateMultiModel,
     generateSingleModel,
     enhancePromptWithDeepSeek,
+    getCredits,
     MODELS,
     MODEL_LABELS
 } = require('./kieClient');
@@ -40,6 +41,16 @@ const upload = multer({ storage });
 // Health Check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date() });
+});
+
+// Get KIE API Credits
+app.get('/api/credits', async (req, res) => {
+    try {
+        const credits = await getCredits();
+        res.json({ credits: credits, timestamp: new Date() });
+    } catch (e) {
+        res.status(500).json({ error: e.message, credits: null });
+    }
 });
 
 // Get available models
@@ -128,6 +139,7 @@ app.post('/api/generate', async (req, res) => {
                 model: mode === 'multi-model' ? 'ALL' : (attributes.model || 'auto'),
                 length: attributes.length || '',
                 shape: attributes.shape || '',
+                decoration: attributes.decoration || '',
                 color: attributes.color || '',
                 refImage: attributes.refImage,
                 status: 'processing'
@@ -143,7 +155,7 @@ app.post('/api/generate', async (req, res) => {
         } else {
             // Single model generation
             // Updated to pass logoBase64
-            const selectedModel = attributes.model || MODELS.GPT;
+            const selectedModel = attributes.model || MODELS.SEEDREAM_EDIT;
             const loops = Math.max(1, Math.min(count, 4));
 
             const promises = [];

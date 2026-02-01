@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ARABIC_LABELS, MOCK_COLORS } from '../constants';
-import { ThermosLength, ThermosShape, DesignRequest, GeneratedItem } from '../types';
+import { ThermosLength, ThermosShape, HeadHandleDecoration, DesignRequest, GeneratedItem } from '../types';
 import Button from './Button';
 import ImageCard from './ImageCard';
 import { uploadImage, createGenerationTask, enhancePrompt } from '../services/kieService';
@@ -26,8 +26,9 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
   const [prompt, setPrompt] = useState('');
   const [length, setLength] = useState<ThermosLength | ''>('');
   const [shape, setShape] = useState<ThermosShape | ''>('');
+  const [decoration, setDecoration] = useState<HeadHandleDecoration | ''>('');
   const [color, setColor] = useState<string>('');
-  const [model, setModel] = useState<string>('');
+  const [model, setModel] = useState<string>('seedream/4.5-edit');
   const [count, setCount] = useState(1);
 
   const [activeRefBase64, setActiveRefBase64] = useState<string | null>(null);
@@ -51,7 +52,7 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
     setStatusMessage('جاري تحسين الوصف بواسطة DeepSeek...');
     setError(null);
     try {
-      const enhanced = await enhancePrompt(prompt, { color, shape, length });
+      const enhanced = await enhancePrompt(prompt, { color, shape, length, decoration });
       setPrompt(enhanced);
     } catch (err) {
       console.error(err);
@@ -80,27 +81,17 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
       const file = new File([blob], "input.jpg", { type: "image/jpeg" });
       const uploadedUrl = await uploadImage(file);
 
-      setStatusMessage('جاري تحسين الوصف (Product Expert)...');
-
-      // Auto-Enhance before generation
-      let finalPrompt = prompt;
-      try {
-        // Use TYPE='product' (default) which now maps to the 20-Year Veteran Industrial Designer
-        const enhanced = await enhancePrompt(prompt || 'تصميم ترمس فاخر', { length, shape, color }, 'product');
-        finalPrompt = enhanced;
-        // Optional: Update UI so user sees the magic
-        setPrompt(finalPrompt);
-      } catch (e) {
-        console.warn("Auto-enhancement failed, using original", e);
-      }
-
       setStatusMessage('جاري التوليد...');
+
+      // Use prompt as-is (no auto-enhance - user must click enhance button)
+      const finalPrompt = prompt || 'تصميم ترمس فاخر';
 
       const result = await createGenerationTask(
         finalPrompt,
         {
           length: length || '',
           shape: shape || '',
+          decoration: decoration || '',
           color,
           model: model === 'MULTI' ? undefined : model,
           refImage: uploadedUrl
@@ -141,21 +132,26 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
     }
   };
 
-  const handleUseAsReference = (src: string) => {
-    // If it's a URL, fetch and convert to base64
+  const handleUseAsReference = async (src: string) => {
+    // If it's a URL, fetch and convert to base64 (use proxy for CORS)
     if (src.startsWith('http')) {
-      fetch(src)
-        .then(res => res.blob())
-        .then(blob => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = reader.result as string;
-            const base64Data = result.split(',')[1];
-            setActiveRefBase64(base64Data);
-          };
-          reader.readAsDataURL(blob);
-        })
-        .catch(err => console.error("Failed to load image:", err));
+      try {
+        setStatusMessage('جاري تحميل الصورة...');
+        const { fetchRemoteImage } = await import('../services/kieService');
+        const blob = await fetchRemoteImage(src);
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64Data = result.split(',')[1];
+          setActiveRefBase64(base64Data);
+          setStatusMessage('');
+        };
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error("Failed to load image:", err);
+        setError("تعذر تحميل الصورة. حاول مرة أخرى.");
+        setStatusMessage('');
+      }
     } else {
       const b64 = src.split(',')[1];
       setActiveRefBase64(b64);
@@ -274,13 +270,16 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
           <div className="space-y-4">
             <div className="flex justify-between items-end">
               <label className="text-sm font-bold text-gray-700 mr-2">{ARABIC_LABELS.promptLabel}</label>
-              <button
-                onClick={handleEnhance}
-                disabled={isEnhancing || !prompt.trim()}
-                className="text-sm font-bold text-basplast-600 hover:text-basplast-700 flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50"
-              >
-                {isEnhancing ? 'جاري التحسين بـ DeepSeek...' : ARABIC_LABELS.enhanceBtn}
-              </button>
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={handleEnhance}
+                  disabled={isEnhancing || !prompt.trim()}
+                  className="text-sm font-bold text-basplast-600 hover:text-basplast-700 flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50"
+                >
+                  {isEnhancing ? 'جاري التحسين...' : ARABIC_LABELS.enhanceBtn}
+                </button>
+                <span className="text-xs text-orange-500">⚠️ التحسين سيغير شكل المنتج بالكامل</span>
+              </div>
             </div>
             <div className="relative group">
               <textarea
@@ -296,7 +295,7 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
           </div>
 
           {/* Controls Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {/* Count */}
             <div className="space-y-2 text-right">
               <label className="text-xs font-bold text-gray-400 uppercase mr-2">عدد الصور</label>
@@ -319,7 +318,6 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
                 onChange={(e) => setModel(e.target.value)}
                 className="w-full h-14 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white text-sm font-bold px-4 transition-colors"
               >
-                <option value="MULTI">✨ جميع النماذج</option>
                 {Object.entries(ARABIC_LABELS.models).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
@@ -352,6 +350,21 @@ const GeneratorView: React.FC<GeneratorViewProps> = ({ onGenerateComplete }) => 
                 <option value="">تلقائي</option>
                 {Object.values(ThermosShape).map((s) => (
                   <option key={s} value={s}>{ARABIC_LABELS.shapes[s]}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Decoration - Head & Handle */}
+            <div className="space-y-2 text-right">
+              <label className="text-xs font-bold text-gray-400 uppercase mr-2">{ARABIC_LABELS.decorationLabel}</label>
+              <select
+                value={decoration}
+                onChange={(e) => setDecoration(e.target.value as HeadHandleDecoration)}
+                className="w-full h-14 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white text-sm font-bold px-4 transition-colors"
+              >
+                <option value="">تلقائي</option>
+                {Object.values(HeadHandleDecoration).map((d) => (
+                  <option key={d} value={d}>{ARABIC_LABELS.decorations[d]}</option>
                 ))}
               </select>
             </div>

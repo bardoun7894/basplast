@@ -53,7 +53,7 @@ export async function analyzeReferenceImage(base64Image: string): Promise<string
  */
 export async function enhanceThermosPrompt(
   userText: string,
-  attributes: { length: string; shape: string },
+  attributes: { length: string; shape: string; decoration?: string },
   referenceDescription?: string
 ): Promise<string> {
 
@@ -63,6 +63,9 @@ export async function enhanceThermosPrompt(
   let contextInstructions = "";
   if (attributes.shape) contextInstructions += `The thermos MUST have a '${attributes.shape}' shape. `;
   if (attributes.length) contextInstructions += `The size MUST be '${attributes.length}'. `;
+  if (attributes.decoration && attributes.decoration !== 'None') {
+    contextInstructions += `The thermos head (lid) and handle MUST have subtle '${attributes.decoration}' style decorative patterns as a gentle enhancement. `;
+  }
   if (referenceDescription) contextInstructions += `The physical structure MUST match this description: "${referenceDescription}". `;
 
   try {
@@ -90,7 +93,7 @@ export async function enhanceThermosPrompt(
  */
 export async function generateThermosDesigns(
   userPrompt: string,
-  attributes: { length: string; shape: string; color: string },
+  attributes: { length: string; shape: string; decoration?: string; color: string },
   referenceImageBase64?: string
 ): Promise<string[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -104,6 +107,7 @@ export async function generateThermosDesigns(
   // Inject Structured Attributes
   if (attributes.length) finalPrompt += `Size: ${attributes.length}. `;
   if (attributes.shape) finalPrompt += `Shape: ${attributes.shape}. `;
+  if (attributes.decoration && attributes.decoration !== 'None') finalPrompt += `Head & Handle Decoration: subtle ${attributes.decoration} patterns. `;
   if (attributes.color) finalPrompt += `Primary Color: ${attributes.color}. `;
 
   // Inject Reference Image Analysis (if applicable)

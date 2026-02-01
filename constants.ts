@@ -1,4 +1,4 @@
-import { ThermosLength, ThermosShape } from "./types";
+import { ThermosLength, ThermosShape, HeadHandleDecoration } from "./types";
 
 export const ARABIC_LABELS = {
   appTitle: "مصمم باس أتيليه الذكي",
@@ -45,13 +45,22 @@ export const ARABIC_LABELS = {
     [ThermosLength.Medium]: "وسط (١.٠ لتر)",
     [ThermosLength.Long]: "كبير (١.٥ لتر+)"
   },
+  decorationLabel: "شكل المنتج الجديد",
+  decorations: {
+    [HeadHandleDecoration.None]: "بدون",
+    [HeadHandleDecoration.Waves]: "تموجات",
+    [HeadHandleDecoration.Crown]: "تاج",
+    [HeadHandleDecoration.Zigzag]: "خطوط متعرجة",
+    [HeadHandleDecoration.Sculpted]: "حواف منحوتة",
+    [HeadHandleDecoration.Grooves]: "أخاديد"
+  },
   modelLabel: "نموذج الذكاء الاصطناعي",
   models: {
-    'gpt-image/gpt-4.1-image': "GPT-4o Image (تعديل الصور)",
-    'flux-kontext-pro': "Flux Kontext (تعديل احترافي)",
-    'flux-2/flex-image-to-image': "Flux Flex (صورة إلى صورة)",
-    'ideogram/v3-remix': "Ideogram Remix (ريميكس فني)",
-    'midjourney/mj-api': "Midjourney (جديد)"
+    'seedream/4.5-edit': "Seedream Edit ⭐ (تعديل دقيق - يحافظ على الشكل)",
+    'flux-2/flex-image-to-image': "Flux Flex (تعديل متوسط - تغيير جزئي)",
+    'flux-kontext-pro': "Flux Kontext Pro (تعديل شامل - إعادة تصميم)",
+    'flux-kontext-max': "Flux Kontext Max (أعلى جودة 4K - أغلى)",
+    'nano-banana-pro': "Nano Banana Pro 🍌 (إبداعي - نقوش عربية وإسلامية)"
   }
 };
 

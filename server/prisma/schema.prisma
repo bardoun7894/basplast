@@ -16,10 +16,11 @@ model Generation {
   model     String   // 'multi-model', 'gpt...', etc
   
   // Inputs
-  length    String?
-  shape     String?
-  color     String?
-  refImage  String? // URL or base64 (stored as path if uploaded)
+  length     String?
+  shape      String?
+  decoration String?  // Head & Handle decoration style
+  color      String?
+  refImage   String? // URL or base64 (stored as path if uploaded)
   
   // Outputs
   images    String[] // Array of Image URLs
